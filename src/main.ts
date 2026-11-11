@@ -353,7 +353,7 @@ async function downloadSummary() {
     const drawing = zip.file('xl/drawings/drawing1.xml');
     if (drawing) {
       const xml = await drawing.async('string');
-      const cleaned = xml.replace(/<xdr:twoCellAnchor\\b[^>]*>[\\s\\S]*?<\\/xdr:twoCellAnchor>/g, block =>
+      const cleaned = xml.replace(new RegExp('<xdr:twoCellAnchor\\b[^>]*>[\\s\\S]*?</xdr:twoCellAnchor>', 'g'), block =>
         block.includes('Merci de nous faire confiance') ? '' : block
       );
       if (cleaned !== xml) {

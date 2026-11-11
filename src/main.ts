@@ -1,6 +1,6 @@
 import './styles.css';
 document.querySelector('#app')!.innerHTML =
-  '<header><div class="wrap"><h1>F10 · Facturation</h1><p>Interventions, calculs et exportation Excel</p></div></header><div class="wrap"><div class="stats"><div class="stat"><small>Total de la semaine · TPS + TVQ incluses</small><b id="sum">0,00 $</b><small id="weekRange">Semaine en cours</small></div><div class="stat"><small>Interventions cette semaine</small><b id="count">0</b></div></div><main><section class="panel"><h2 id="formTitle">Nouvelle intervention</h2><form id="invoice"><div class="grid"><div class="field"><label>Numéro de facture *</label><input name="invoiceNumber" value="F10" required placeholder="Ex. F10"></div><div class="field"><label>Tech ID</label><input class="fixed" value="x239197" disabled></div><div class="field"><label>Date du service *</label><input id="date" type="date" name="date" required></div><div class="field"><label>Numéro de job *</label><input name="job" required placeholder="Ex. 42122063"></div><div class="field wide"><label>Nom du client *</label><input name="client" required placeholder="Nom au compte"></div><div class="field"><label>Statut</label><select name="status"><option>Complete / Complet</option><option>Incomplete / Incomplet</option></select></div><div class="field"><label>Province</label><input class="fixed" value="QC" disabled></div><div class="field"><label>Point de départ (ville) *</label><input name="origin" required placeholder="Ex. Juliette"></div><div class="field"><label>Lieu de service (ville) *</label><input name="destination" required placeholder="Ex. Langelier"></div><div class="field"><label>Distance (km) facultative</label><input name="distance" placeholder="Ex. 75"></div><div class="field"><label>Temps de conduite facultatif</label><input name="driveTime" placeholder="Ex. 1.5"></div><div class="field wide"><label>Frais liés à *</label><select id="fees" name="fees"></select></div><div class="field wide"><label>Notes sur le service rendu *</label><textarea name="notes" required placeholder="Décris le travail effectué..."></textarea></div><div class="field"><label>Quantité *</label><input id="quantity" type="number" name="quantity" min="0.01" step="any" value="1" required></div><div class="field"><label>Taux fixe</label><input class="fixed" value="40 $ / unité" disabled></div></div><div class="total"><span>Charges totales</span><strong id="lineTotal">40,00 $</strong></div><button class="primary" id="submit" type="submit">Enregistrer l’intervention</button></form></section><section class="panel"><h2>Exporter les factures</h2><div class="field"><label>Choisir une date dans la période</label><input type="date" id="exportDate"></div><p class="muted">L\'export mensuel regroupe 4 semaines consécutives dans un seul classeur Excel.</p><div class="export-actions"><div class="export-pair"><button class="secondary" id="week">Exporter 1 semaine</button></div><div class="export-pair"><button class="primary" id="month">Exporter 4 semaines</button></div></div><div class="notice">Version de démonstration : données conservées uniquement sur cet appareil. L\'export utilise le fichier Excel original. Vérifie le fichier téléchargé avant de l\'envoyer au client. N\'entre pas de données confidentielles.</div></section><section class="panel"><h2>Historique des interventions</h2><div id="entries"></div></section></main></div>';
+  '<header><div class="wrap"><h1>F10 · Facturation</h1><p>Interventions, calculs et exportation Excel</p></div></header><div class="wrap"><div class="stats"><div class="stat"><small>Total de la semaine · TPS + TVQ incluses</small><b id="sum">0,00 $</b><small id="weekRange">Semaine en cours</small></div><div class="stat"><small>Interventions cette semaine</small><b id="count">0</b></div></div><main><section class="panel"><h2 id="formTitle">Nouvelle intervention</h2><form id="invoice"><div class="grid"><div class="field"><label>Numéro de facture *</label><input name="invoiceNumber" value="F10" required placeholder="Ex. F10"></div><div class="field"><label>Tech ID</label><input class="fixed" value="x239197" disabled></div><div class="field"><label>Date du service *</label><input id="date" type="date" name="date" required></div><div class="field"><label>Numéro de job *</label><input name="job" required placeholder="Ex. 42122063"></div><div class="field wide"><label>Nom du client *</label><input name="client" required placeholder="Nom au compte"></div><div class="field"><label>Statut</label><select name="status"><option>Complete / Complet</option><option>Incomplete / Incomplet</option></select></div><div class="field"><label>Province</label><input class="fixed" value="QC" disabled></div><div class="field"><label>Point de départ (ville) *</label><input name="origin" required placeholder="Ex. Juliette"></div><div class="field"><label>Lieu de service (ville) *</label><input name="destination" required placeholder="Ex. Langelier"></div><div class="field"><label>Distance (km) facultative</label><input name="distance" placeholder="Ex. 75"></div><div class="field"><label>Temps de conduite facultatif</label><input name="driveTime" placeholder="Ex. 1.5"></div><div class="field wide"><label>Frais liés à *</label><select id="fees" name="fees"></select></div><div class="field wide"><label>Notes sur le service rendu *</label><textarea name="notes" required placeholder="Décris le travail effectué..."></textarea></div><div class="field"><label>Quantité *</label><input id="quantity" type="number" name="quantity" min="0.01" step="any" value="1" required></div><div class="field"><label>Taux fixe</label><input class="fixed" value="40 $ / unité" disabled></div></div><div class="total"><span>Charges totales</span><strong id="lineTotal">40,00 $</strong></div><button class="primary" id="submit" type="submit">Enregistrer l’intervention</button></form></section><section class="panel"><h2>Exporter les factures</h2><div class="field"><label>Choisir une date dans la période</label><input type="date" id="exportDate"></div><p class="muted">L\'export mensuel regroupe 4 semaines consécutives dans un seul classeur Excel.</p><div class="export-actions"><div class="export-pair"><button class="secondary" id="week">Exporter 1 semaine</button></div><div class="export-pair"><button class="primary" id="month">Exporter 4 semaines</button></div><div class="export-pair"><button class="secondary" id="summary">Exporter la facture récapitulative</button></div></div><div class="notice">Version de démonstration : données conservées uniquement sur cet appareil. L\'export utilise le fichier Excel original. Vérifie le fichier téléchargé avant de l\'envoyer au client. N\'entre pas de données confidentielles.</div></section><section class="panel"><h2>Historique des interventions</h2><div id="entries"></div></section></main></div>';
 import { Buffer } from 'buffer';
 import process from 'process';
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
@@ -287,6 +287,58 @@ function legacyDownload(period) {
   }
   XLSX.writeFile(wb, 'F10_' + period + '_' + date + '.xlsx');
 }
+async function downloadSummary() {
+  const selected = $('#exportDate').value || today;
+  const day = dateObj(selected);
+  if (Number.isNaN(day.getTime())) {
+    alert('Choisis une date valide.');
+    return;
+  }
+  // Le récapitulatif va du dimanche au samedi, contrairement aux exports détaillés.
+  const sunday = new Date(day);
+  sunday.setDate(sunday.getDate() - sunday.getDay());
+  const saturday = new Date(sunday);
+  saturday.setDate(saturday.getDate() + 6);
+  const start = dateKey(sunday);
+  const end = dateKey(saturday);
+  const rows = records.filter(r => r.date >= start && r.date <= end);
+  if (!rows.length) {
+    alert('Aucune intervention enregistrée du ' + start + ' au ' + end + '.');
+    return;
+  }
+  const subtotal = Math.round((rows.reduce((sum, r) => sum + Number(r.quantity || 0) * 40, 0) + Number.EPSILON) * 100) / 100;
+  try {
+    const response = await fetch('./resources/facture%20shs%2030telus%202026.xlsx', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Le gabarit de facture récapitulative est introuvable.');
+    const { default: XlsxPopulate } = await import('xlsx-populate');
+    const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
+    const sheet = workbook.sheet(0);
+    // Modifier seulement les valeurs, pour préserver les couleurs, bordures,
+    // cellules fusionnées et la disposition du fichier original.
+    sheet.cell('F4').value('Du ' + start + ' au ' + end);
+    sheet.cell('F19').value(subtotal);
+    sheet.cell('F20').formula('F19*5%');
+    sheet.cell('F21').formula('F19*9.975%');
+    sheet.cell('F22').formula('SUM(F19:F21)');
+    // Retirer les anciennes lignes d'intervention du gabarit récapitulatif.
+    for (let row = 16; row <= 18; row++) {
+      for (const col of ['B', 'C', 'D', 'E', 'F']) sheet.cell(col + row).value(null);
+    }
+    const bytes = await workbook.outputAsync();
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Facture_recapitulative_' + start + '_au_' + end + '.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+  } catch (error) {
+    console.error(error);
+    alert('Impossible de générer la facture récapitulative : ' + (error.message || error));
+  }
+}
 async function download(period, share = false) {
   let date = $('#exportDate').value || today;
   if (period === 'week' && weekRows(date).length === 0 && records.length > 0) {
@@ -399,4 +451,5 @@ async function download(period, share = false) {
 $('#exportDate').value = today;
 $('#week').addEventListener('click', () => download('week'));
 $('#month').addEventListener('click', () => download('month'));
+$('#summary').addEventListener('click', downloadSummary);
 draw();

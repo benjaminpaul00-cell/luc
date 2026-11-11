@@ -1,6 +1,6 @@
 import './styles.css';
 document.querySelector('#app')!.innerHTML =
-  '<header><div class="wrap"><h1>F10 · Facturation</h1><p>Interventions, calculs et exportation Excel</p></div></header><div class="wrap"><div class="stats"><div class="stat"><small>Total de la semaine · TPS + TVQ incluses</small><b id="sum">0,00 $</b><small id="weekRange">Semaine en cours</small></div><div class="stat"><small>Interventions cette semaine</small><b id="count">0</b></div></div><main><section class="panel"><h2 id="formTitle">Nouvelle intervention</h2><form id="invoice"><div class="grid"><div class="field"><label>Numéro de facture</label><input class="fixed" value="F10" disabled></div><div class="field"><label>Tech ID</label><input class="fixed" value="x239197" disabled></div><div class="field"><label>Date du service *</label><input id="date" type="date" name="date" required></div><div class="field"><label>Numéro de job *</label><input name="job" required placeholder="Ex. 42122063"></div><div class="field wide"><label>Nom du client *</label><input name="client" required placeholder="Nom au compte"></div><div class="field"><label>Statut</label><select name="status"><option>Complete / Complet</option><option>Incomplete / Incomplet</option></select></div><div class="field"><label>Province</label><input class="fixed" value="QC" disabled></div><div class="field"><label>Point de départ (ville) *</label><input name="origin" required placeholder="Ex. Juliette"></div><div class="field"><label>Lieu de service (ville) *</label><input name="destination" required placeholder="Ex. Langelier"></div><div class="field"><label>Distance (km) facultative</label><input name="distance" placeholder="Ex. 75"></div><div class="field"><label>Temps de conduite facultatif</label><input name="driveTime" placeholder="Ex. 1.5"></div><div class="field wide"><label>Frais liés à *</label><select id="fees" name="fees"></select></div><div class="field wide"><label>Notes sur le service rendu *</label><textarea name="notes" required placeholder="Décris le travail effectué..."></textarea></div><div class="field"><label>Quantité *</label><input id="quantity" type="number" name="quantity" min="0.01" step="any" value="1" required></div><div class="field"><label>Taux fixe</label><input class="fixed" value="40 $ / unité" disabled></div></div><div class="total"><span>Charges totales</span><strong id="lineTotal">40,00 $</strong></div><button class="primary" id="submit" type="submit">Enregistrer l’intervention</button></form></section><section class="panel"><h2>Exporter les factures</h2><div class="field"><label>Choisir une date dans la période</label><input type="date" id="exportDate"></div><p class="muted">L\'export mensuel regroupe 4 semaines consécutives dans un seul classeur Excel.</p><div class="export-actions"><div class="export-pair"><button class="secondary" id="week">Exporter 1 semaine</button></div><div class="export-pair"><button class="primary" id="month">Exporter 4 semaines</button></div></div><div class="notice">Version de démonstration : données conservées uniquement sur cet appareil. L\'export utilise le fichier Excel original. Vérifie le fichier téléchargé avant de l\'envoyer au client. N\'entre pas de données confidentielles.</div></section><section class="panel"><h2>Historique des interventions</h2><div id="entries"></div></section></main></div>';
+  '<header><div class="wrap"><h1>F10 · Facturation</h1><p>Interventions, calculs et exportation Excel</p></div></header><div class="wrap"><div class="stats"><div class="stat"><small>Total de la semaine · TPS + TVQ incluses</small><b id="sum">0,00 $</b><small id="weekRange">Semaine en cours</small></div><div class="stat"><small>Interventions cette semaine</small><b id="count">0</b></div></div><main><section class="panel"><h2 id="formTitle">Nouvelle intervention</h2><form id="invoice"><div class="grid"><div class="field"><label>Numéro de facture *</label><input name="invoiceNumber" value="F10" required placeholder="Ex. F10"></div><div class="field"><label>Tech ID</label><input class="fixed" value="x239197" disabled></div><div class="field"><label>Date du service *</label><input id="date" type="date" name="date" required></div><div class="field"><label>Numéro de job *</label><input name="job" required placeholder="Ex. 42122063"></div><div class="field wide"><label>Nom du client *</label><input name="client" required placeholder="Nom au compte"></div><div class="field"><label>Statut</label><select name="status"><option>Complete / Complet</option><option>Incomplete / Incomplet</option></select></div><div class="field"><label>Province</label><input class="fixed" value="QC" disabled></div><div class="field"><label>Point de départ (ville) *</label><input name="origin" required placeholder="Ex. Juliette"></div><div class="field"><label>Lieu de service (ville) *</label><input name="destination" required placeholder="Ex. Langelier"></div><div class="field"><label>Distance (km) facultative</label><input name="distance" placeholder="Ex. 75"></div><div class="field"><label>Temps de conduite facultatif</label><input name="driveTime" placeholder="Ex. 1.5"></div><div class="field wide"><label>Frais liés à *</label><select id="fees" name="fees"></select></div><div class="field wide"><label>Notes sur le service rendu *</label><textarea name="notes" required placeholder="Décris le travail effectué..."></textarea></div><div class="field"><label>Quantité *</label><input id="quantity" type="number" name="quantity" min="0.01" step="any" value="1" required></div><div class="field"><label>Taux fixe</label><input class="fixed" value="40 $ / unité" disabled></div></div><div class="total"><span>Charges totales</span><strong id="lineTotal">40,00 $</strong></div><button class="primary" id="submit" type="submit">Enregistrer l’intervention</button></form></section><section class="panel"><h2>Exporter les factures</h2><div class="field"><label>Choisir une date dans la période</label><input type="date" id="exportDate"></div><p class="muted">L\'export mensuel regroupe 4 semaines consécutives dans un seul classeur Excel.</p><div class="export-actions"><div class="export-pair"><button class="secondary" id="week">Exporter 1 semaine</button></div><div class="export-pair"><button class="primary" id="month">Exporter 4 semaines</button></div></div><div class="notice">Version de démonstration : données conservées uniquement sur cet appareil. L\'export utilise le fichier Excel original. Vérifie le fichier téléchargé avant de l\'envoyer au client. N\'entre pas de données confidentielles.</div></section><section class="panel"><h2>Historique des interventions</h2><div id="entries"></div></section></main></div>';
 import { Buffer } from 'buffer';
 import process from 'process';
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
@@ -110,6 +110,7 @@ $('#invoice').addEventListener('submit', e => {
   data.quantity = Number(data.quantity);
   if (
     !data.date ||
+    !data.invoiceNumber?.trim() ||
     !data.job.trim() ||
     !data.client.trim() ||
     !data.origin.trim() ||
@@ -129,6 +130,7 @@ $('#invoice').addEventListener('submit', e => {
   draw();
   e.currentTarget.reset();
   $('#date').value = today;
+  $('[name="invoiceNumber"]').value = 'F10';
   $('#quantity').value = '1';
   $('#lineTotal').textContent = money(40);
   editId = null;
@@ -199,7 +201,7 @@ function exportSheet(rows, title) {
   ];
   rows.forEach(r =>
     aoa.push([
-      'F10',
+      r.invoiceNumber || 'F10',
       r.date,
       r.job,
       'x239197',
@@ -342,7 +344,7 @@ async function download(period, share = false) {
         const dt = dateObj(r.date);
         const serial = (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(1899,11,30)) / 86400000;
         const values = {
-          A:'F10',B:serial,C:r.job,D:'x239197',E:r.client,
+          A:r.invoiceNumber || 'F10',B:serial,C:r.job,D:'x239197',E:r.client,
           F:r.status,G:r.origin,H:r.destination,I:'QC',
           J:r.distance ? Number(r.distance) : null,
           K:r.driveTime ? Number(r.driveTime) : null,

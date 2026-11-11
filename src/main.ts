@@ -361,36 +361,32 @@ async function download(period, share = false) {
       sheet.cell('P61').formula('P59*9.975%');
       sheet.cell('P62').formula('SUM(P59:P61)');
     }
-    const bytes = await workbook.outputAsync();
+    // Générer un vrai fichier binaire XLSX (archive ZIP), pas une chaîne de texte.
+    const output = await workbook.outputAsync({ type: 'uint8array' });
+    const bytes = output instanceof Uint8Array ? output : new Uint8Array(output);
+    if (bytes.length < 100 || bytes[0] !== 0x50 || bytes[1] !== 0x4b ||
+        (bytes[2] !== 0x03 && bytes[2] !== 0x05 && bytes[2] !== 0x07)) {
+      throw new Error('Le classeur généré ne contient pas une archive XLSX valide.');
+    }
     const filename = 'F10_' + period + '_' + date + '.xlsx';
-    const file = new File([bytes], filename, {
+    const blob = new Blob([bytes], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
-    // Android ouvre la feuille de partage native avec le classeur en pièce jointe.
-    // Le navigateur doit prendre en charge le partage de fichiers.
-    if (share && typeof navigator.share === 'function') {
-      const payload = { files: [file], title: 'Facturation F10' };
-      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share(payload);
-          return; // Partage terminé : ne pas déclencher un téléchargement en plus.
-        } catch (shareError) {
-          if (shareError?.name === 'AbortError') return; // Annulation volontaire.
-          console.warn('Partage natif refusé', shareError);
-        }
-      }
+    if (blob.size !== bytes.byteLength) {
+      throw new Error('Le téléchargement Excel est incomplet.');
     }
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-    if (share) {
-      alert('Le partage direct de pièces jointes n’est pas disponible dans ce navigateur. Le fichier Excel a été téléchargé : joins-le à ton courriel depuis Gmail ou Outlook.');
-    }
+    // Certains appareils Android lisent le blob après le clic.
+    // Ne pas révoquer l'URL trop tôt.
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      a.remove();
+    }, 120000);
   } catch (error) {
     console.error(error);
     alert('Impossible de générer le fichier Excel original : '+(error.message||error));

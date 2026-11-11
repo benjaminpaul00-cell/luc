@@ -324,17 +324,43 @@ async function downloadSummary() {
       const row = 16 + i;
       const minutesOrHours = rows.reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
       const hours = field === 'driveTime' ? minutesOrHours / 60 : minutesOrHours;
-      sheet.cell('B' + row).value(start + ' au ' + end);
+      sheet.cell('B' + row).value(start.slice(8,10) + '/' + start.slice(5,7) + ' au ' + end.slice(8,10) + '/' + end.slice(5,7));
+      sheet.cell('B' + row).style({ wrapText: true, verticalAlignment: 'center', fontSize: 9 });
+      sheet.cell('C' + row).style({ horizontalAlignment: 'center', verticalAlignment: 'center' });
+      sheet.cell('D' + row).style({ wrapText: true, verticalAlignment: 'center', fontSize: 10 });
+      sheet.row(row).height(32);
       sheet.cell('C' + row).value(hours);
       sheet.cell('D' + row).value(label);
       sheet.cell('E' + row).value(40);
       sheet.cell('F' + row).formula('C' + row + '*E' + row);
     });
+    // Largeurs adaptées aux dates, quantités et libellés sur téléphone.
+    sheet.column('B').width(19);
+    sheet.column('C').width(13);
+    sheet.column('D').width(39);
+    sheet.column('E').width(17);
+    sheet.column('F').width(17);
     sheet.cell('F19').formula('SUM(F16:F18)');
     sheet.cell('F20').formula('F19*5%');
     sheet.cell('F21').formula('F19*9.975%');
     sheet.cell('F22').formula('SUM(F19:F21)');
-    const bytes = await workbook.outputAsync();
+    let bytes = await workbook.outputAsync();
+    // Le gabarit contient une zone de texte flottante « Merci de nous faire
+    // confiance » qui recouvre les lignes 18 à 22 dans Google Sheets.
+    // Retirer uniquement cet objet, en préservant les autres dessins du modèle.
+    const { default: JSZip } = await import('jszip');
+    const zip = await JSZip.loadAsync(bytes);
+    const drawing = zip.file('xl/drawings/drawing1.xml');
+    if (drawing) {
+      const xml = await drawing.async('string');
+      const cleaned = xml.replace(/<xdr:twoCellAnchor\\b[^>]*>[\\s\\S]*?<\\/xdr:twoCellAnchor>/g, block =>
+        block.includes('Merci de nous faire confiance') ? '' : block
+      );
+      if (cleaned !== xml) {
+        zip.file('xl/drawings/drawing1.xml', cleaned);
+        bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+      }
+    }
     const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

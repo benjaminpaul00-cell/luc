@@ -374,23 +374,31 @@ async function download(period, share = false) {
     alert(records.length ? 'Aucune intervention pour cette semaine. Vérifie les dates dans l’historique.' : 'Aucune intervention enregistrée. Ajoute une intervention avant de partager.');
     return;
   }
-  if (weeks.some(w => w.rows.length > 53)) {
-    alert('Plus de 53 interventions dans une semaine. Export annulé pour éviter de modifier le gabarit.');
-    return;
-  }
   try {
     const response = await fetch('./resources/modele_original.xlsx');
     if (!response.ok) throw new Error('Le gabarit Excel est indisponible.');
     const { default: XlsxPopulate } = await import('xlsx-populate');
     const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
     const original = workbook.sheet(0);
-    for (let i = 1; i < weeks.length; i++) {
-      workbook.cloneSheet(original, 'Semaine ' + (i + 1));
+    // Une page du gabarit accepte 53 interventions. Ajouter autant de
+    // feuilles que nécessaire sans écraser les totaux ni les couleurs.
+    const pages = weeks.flatMap((week, weekIndex) => {
+      const count = Math.max(1, Math.ceil(week.rows.length / 53));
+      return Array.from({ length: count }, (_, pageIndex) => ({
+        rows: week.rows.slice(pageIndex * 53, (pageIndex + 1) * 53),
+        date: week.date,
+        weekIndex,
+        pageIndex,
+        pageCount: count
+      }));
+    });
+    for (let i = 1; i < pages.length; i++) {
+      workbook.cloneSheet(original, 'Page ' + (i + 1));
     }
-    for (let i = 0; i < weeks.length; i++) {
-      const sheet = i === 0 ? original : workbook.sheet('Semaine ' + (i + 1));
-      const { rows, date: start } = weeks[i];
-      sheet.name(weeks.length === 1 ? 'Détails facturation' : 'Semaine ' + (i + 1));
+    for (let i = 0; i < pages.length; i++) {
+      const sheet = i === 0 ? original : workbook.sheet('Page ' + (i + 1));
+      const { rows, date: start, weekIndex, pageIndex, pageCount } = pages[i];
+      sheet.name(pages.length === 1 ? 'Détails facturation' : 'Sem ' + (weekIndex + 1) + ' page ' + (pageIndex + 1));
       const end = new Date(dateObj(start));
       end.setDate(end.getDate() + 6);
       sheet.cell('E3').value('Du ' + start + ' au ' + dateKey(end));

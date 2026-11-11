@@ -318,55 +318,55 @@ async function download(period, share = false) {
     return;
   }
   try {
-    const response = await fetch('./resources/modele_original.xlsx');
+    const response = await fetch('./resources/modele_original.xlsx', { cache: 'no-store' });
     if (!response.ok) throw new Error('Le gabarit Excel est indisponible.');
-    const { default: XlsxPopulate } = await import('xlsx-populate');
-    const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
-    const original = workbook.sheet(0);
-    for (let i = 1; i < weeks.length; i++) {
-      workbook.cloneSheet(original, 'Semaine ' + (i + 1));
-    }
+    const templateBytes = await response.arrayBuffer();
+    // SheetJS réécrit intégralement le fichier Office Open XML au lieu de
+    // conserver des éléments internes du gabarit susceptibles de poser problème.
+    const template = XLSX.read(templateBytes, { type: 'array', cellStyles: true });
+    const templateSheet = template.Sheets[template.SheetNames[0]];
+    if (!templateSheet) throw new Error('Le gabarit ne contient aucune feuille.');
+    const workbook = XLSX.utils.book_new();
     for (let i = 0; i < weeks.length; i++) {
-      const sheet = i === 0 ? original : workbook.sheet('Semaine ' + (i + 1));
+      const sheet = JSON.parse(JSON.stringify(templateSheet));
       const { rows, date: start } = weeks[i];
-      sheet.name(weeks.length === 1 ? 'Détails facturation' : 'Semaine ' + (i + 1));
       const end = new Date(dateObj(start));
       end.setDate(end.getDate() + 6);
-      sheet.cell('E3').value('Du ' + start + ' au ' + dateKey(end));
+      sheet.E3 = { t: 's', v: 'Du ' + start + ' au ' + dateKey(end) };
       for (let n = 6; n <= 58; n++) {
         for (const col of ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P']) {
-          // Effacer également les anciennes valeurs et formules de la colonne P.
-          sheet.cell(col + n).value(null);
+          delete sheet[col + n];
         }
       }
       rows.forEach((r, index) => {
         const n = index + 6;
         const dt = dateObj(r.date);
-        const serial = (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(1899,11,30)) / 86400000;
+        const serial = (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
         const values = {
-          A:r.invoiceNumber || 'F10',B:serial,C:r.job,D:'x239197',E:r.client,
-          F:r.status,G:r.origin,H:r.destination,I:'QC',
+          A:r.invoiceNumber || 'F10', B:serial, C:r.job, D:'x239197', E:r.client,
+          F:r.status, G:r.origin, H:r.destination, I:'QC',
           J:r.distance ? Number(r.distance) : null,
           K:r.driveTime ? Number(r.driveTime) : null,
-          L:r.fees,M:r.notes,N:Number(r.quantity),O:40
+          L:r.fees, M:r.notes, N:Number(r.quantity), O:40
         };
-        for (const [col,value] of Object.entries(values)) sheet.cell(col+n).value(value);
-        sheet.cell('B'+n).style('numberFormat','dd/mm/yyyy');
-        sheet.cell('P'+n).formula('N'+n+'*O'+n);
+        for (const [col, value] of Object.entries(values)) {
+          if (value == null) continue;
+          sheet[col + n] = typeof value === 'number' ? { t:'n', v:value } : { t:'s', v:String(value) };
+        }
+        sheet['B' + n].z = 'dd/mm/yyyy';
+        sheet['P' + n] = { t:'n', f:'N' + n + '*O' + n };
       });
-      // Le modèle source contient un total P59 figé à 1172 $.
-      // Le remplacer par une formule dépendant exclusivement des nouvelles lignes.
-      sheet.cell('P59').formula('SUM(P6:P58)');
-      sheet.cell('P60').formula('P59*5%');
-      sheet.cell('P61').formula('P59*9.975%');
-      sheet.cell('P62').formula('SUM(P59:P61)');
+      sheet.P59 = { t:'n', f:'SUM(P6:P58)' };
+      sheet.P60 = { t:'n', f:'P59*5%' };
+      sheet.P61 = { t:'n', f:'P59*9.975%' };
+      sheet.P62 = { t:'n', f:'SUM(P59:P61)' };
+      sheet['!ref'] = 'A1:P62';
+      XLSX.utils.book_append_sheet(workbook, sheet, weeks.length === 1 ? 'Détails facturation' : 'Semaine ' + (i + 1));
     }
-    // Générer un vrai fichier binaire XLSX (archive ZIP), pas une chaîne de texte.
-    const output = await workbook.outputAsync({ type: 'uint8array' });
-    const bytes = output instanceof Uint8Array ? output : new Uint8Array(output);
-    if (bytes.length < 100 || bytes[0] !== 0x50 || bytes[1] !== 0x4b ||
-        (bytes[2] !== 0x03 && bytes[2] !== 0x05 && bytes[2] !== 0x07)) {
-      throw new Error('Le classeur généré ne contient pas une archive XLSX valide.');
+    const output = XLSX.write(workbook, { bookType:'xlsx', type:'array', compression:true, cellStyles:true });
+    const bytes = new Uint8Array(output);
+    if (bytes.length < 100 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) {
+      throw new Error('Le classeur Excel généré est invalide.');
     }
     const filename = 'F10_' + period + '_' + date + '.xlsx';
     const blob = new Blob([bytes], {

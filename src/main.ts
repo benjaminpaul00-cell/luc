@@ -318,75 +318,79 @@ async function download(period, share = false) {
     return;
   }
   try {
-    const response = await fetch('./resources/modele_original.xlsx', { cache: 'no-store' });
+    const response = await fetch('./resources/modele_original.xlsx');
     if (!response.ok) throw new Error('Le gabarit Excel est indisponible.');
-    const templateBytes = await response.arrayBuffer();
-    // SheetJS réécrit intégralement le fichier Office Open XML au lieu de
-    // conserver des éléments internes du gabarit susceptibles de poser problème.
-    const template = XLSX.read(templateBytes, { type: 'array', cellStyles: true });
-    const templateSheet = template.Sheets[template.SheetNames[0]];
-    if (!templateSheet) throw new Error('Le gabarit ne contient aucune feuille.');
-    const workbook = XLSX.utils.book_new();
+    const { default: XlsxPopulate } = await import('xlsx-populate');
+    const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
+    const original = workbook.sheet(0);
+    for (let i = 1; i < weeks.length; i++) {
+      workbook.cloneSheet(original, 'Semaine ' + (i + 1));
+    }
     for (let i = 0; i < weeks.length; i++) {
-      const sheet = JSON.parse(JSON.stringify(templateSheet));
+      const sheet = i === 0 ? original : workbook.sheet('Semaine ' + (i + 1));
       const { rows, date: start } = weeks[i];
+      sheet.name(weeks.length === 1 ? 'Détails facturation' : 'Semaine ' + (i + 1));
       const end = new Date(dateObj(start));
       end.setDate(end.getDate() + 6);
-      sheet.E3 = { t: 's', v: 'Du ' + start + ' au ' + dateKey(end) };
+      sheet.cell('E3').value('Du ' + start + ' au ' + dateKey(end));
       for (let n = 6; n <= 58; n++) {
         for (const col of ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P']) {
-          delete sheet[col + n];
+          // Effacer également les anciennes valeurs et formules de la colonne P.
+          sheet.cell(col + n).value(null);
         }
       }
       rows.forEach((r, index) => {
         const n = index + 6;
         const dt = dateObj(r.date);
-        const serial = (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
+        const serial = (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(1899,11,30)) / 86400000;
         const values = {
-          A:r.invoiceNumber || 'F10', B:serial, C:r.job, D:'x239197', E:r.client,
-          F:r.status, G:r.origin, H:r.destination, I:'QC',
+          A:r.invoiceNumber || 'F10',B:serial,C:r.job,D:'x239197',E:r.client,
+          F:r.status,G:r.origin,H:r.destination,I:'QC',
           J:r.distance ? Number(r.distance) : null,
           K:r.driveTime ? Number(r.driveTime) : null,
-          L:r.fees, M:r.notes, N:Number(r.quantity), O:40
+          L:r.fees,M:r.notes,N:Number(r.quantity),O:40
         };
-        for (const [col, value] of Object.entries(values)) {
-          if (value == null) continue;
-          sheet[col + n] = typeof value === 'number' ? { t:'n', v:value } : { t:'s', v:String(value) };
-        }
-        sheet['B' + n].z = 'dd/mm/yyyy';
-        sheet['P' + n] = { t:'n', f:'N' + n + '*O' + n };
+        for (const [col,value] of Object.entries(values)) sheet.cell(col+n).value(value);
+        sheet.cell('B'+n).style('numberFormat','dd/mm/yyyy');
+        sheet.cell('P'+n).formula('N'+n+'*O'+n);
       });
-      sheet.P59 = { t:'n', f:'SUM(P6:P58)' };
-      sheet.P60 = { t:'n', f:'P59*5%' };
-      sheet.P61 = { t:'n', f:'P59*9.975%' };
-      sheet.P62 = { t:'n', f:'SUM(P59:P61)' };
-      sheet['!ref'] = 'A1:P62';
-      XLSX.utils.book_append_sheet(workbook, sheet, weeks.length === 1 ? 'Détails facturation' : 'Semaine ' + (i + 1));
+      // Le modèle source contient un total P59 figé à 1172 $.
+      // Le remplacer par une formule dépendant exclusivement des nouvelles lignes.
+      sheet.cell('P59').formula('SUM(P6:P58)');
+      sheet.cell('P60').formula('P59*5%');
+      sheet.cell('P61').formula('P59*9.975%');
+      sheet.cell('P62').formula('SUM(P59:P61)');
     }
-    const output = XLSX.write(workbook, { bookType:'xlsx', type:'array', compression:true, cellStyles:true });
-    const bytes = new Uint8Array(output);
-    if (bytes.length < 100 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) {
-      throw new Error('Le classeur Excel généré est invalide.');
-    }
+    const bytes = await workbook.outputAsync();
     const filename = 'F10_' + period + '_' + date + '.xlsx';
-    const blob = new Blob([bytes], {
+    const file = new File([bytes], filename, {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
-    if (blob.size !== bytes.byteLength) {
-      throw new Error('Le téléchargement Excel est incomplet.');
+    // Android ouvre la feuille de partage native avec le classeur en pièce jointe.
+    // Le navigateur doit prendre en charge le partage de fichiers.
+    if (share && typeof navigator.share === 'function') {
+      const payload = { files: [file], title: 'Facturation F10' };
+      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share(payload);
+          return; // Partage terminé : ne pas déclencher un téléchargement en plus.
+        } catch (shareError) {
+          if (shareError?.name === 'AbortError') return; // Annulation volontaire.
+          console.warn('Partage natif refusé', shareError);
+        }
+      }
     }
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(file);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    // Certains appareils Android lisent le blob après le clic.
-    // Ne pas révoquer l'URL trop tôt.
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-      a.remove();
-    }, 120000);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    if (share) {
+      alert('Le partage direct de pièces jointes n’est pas disponible dans ce navigateur. Le fichier Excel a été téléchargé : joins-le à ton courriel depuis Gmail ou Outlook.');
+    }
   } catch (error) {
     console.error(error);
     alert('Impossible de générer le fichier Excel original : '+(error.message||error));

@@ -16,3 +16,5 @@ npm run dev
 **Partage** : si Android refuse le partage natif, le fichier Excel est téléchargé pour être joint manuellement à Gmail.
 
 **Attention** : les fichiers XLSX générés n'ont pas encore été validés par le client.
+
+Redéploiement Cloudflare

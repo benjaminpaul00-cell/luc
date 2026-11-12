@@ -325,7 +325,7 @@ async function downloadSummary() {
       .filter(r => String(r.fees || '').startsWith('Service call /'))
       .reduce((sum, r) => sum + (Number(r.serviceTime) || 0), 0);
     const categories = [
-      { label: 'Frais de transport (0,016 × km)', units: totalKm * 0.016 },
+      { label: 'Frais de transport', units: totalKm },
       { label: 'Temps d’installation', units: installHours },
       { label: 'Temps de service', units: serviceHours }
     ];
@@ -338,8 +338,9 @@ async function downloadSummary() {
       sheet.cell('D' + row).value(label);
       sheet.cell('D' + row).style({ wrapText: true, verticalAlignment: 'center', fontSize: 10 });
       sheet.row(row).height(32);
-      sheet.cell('E' + row).value(40);
-      sheet.cell('F' + row).formula('C' + row + '*E' + row);
+      // Prix unitaire et montant saisis manuellement dans Excel.
+      sheet.cell('E' + row).value(null);
+      sheet.cell('F' + row).value(null);
     });
     // Largeurs adaptées aux dates, quantités et libellés sur téléphone.
     sheet.column('B').width(19);
@@ -347,9 +348,10 @@ async function downloadSummary() {
     sheet.column('D').width(39);
     sheet.column('E').width(17);
     sheet.column('F').width(17);
-    sheet.cell('F19').formula('SUM(F16:F18)');
-    sheet.cell('F20').formula('F19*5%');
-    sheet.cell('F21').formula('F19*9.975%');
+    // Sous-total et taxes saisis manuellement ; seul le total est calculé.
+    sheet.cell('F19').value(null);
+    sheet.cell('F20').value(null);
+    sheet.cell('F21').value(null);
     sheet.cell('F22').formula('SUM(F19:F21)');
     let bytes = await workbook.outputAsync();
     // Le gabarit contient une zone de texte flottante « Merci de nous faire

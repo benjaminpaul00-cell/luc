@@ -348,10 +348,11 @@ async function downloadSummary() {
     sheet.column('D').width(39);
     sheet.column('E').width(17);
     sheet.column('F').width(17);
-    // Sous-total et taxes saisis manuellement ; seul le total est calculé.
-    sheet.cell('F19').value(null);
-    sheet.cell('F20').value(null);
-    sheet.cell('F21').value(null);
+    // Les montants des lignes sont saisis manuellement dans Excel.
+    // Le sous-total, les taxes et le total se recalculent automatiquement.
+    sheet.cell('F19').formula('SUM(F16:F18)');
+    sheet.cell('F20').formula('ROUND(F19*5%,2)');
+    sheet.cell('F21').formula('ROUND(F19*9.975%,2)');
     sheet.cell('F22').formula('SUM(F19:F21)');
     let bytes = await workbook.outputAsync();
     // Le gabarit contient une zone de texte flottante « Merci de nous faire

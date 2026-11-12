@@ -315,22 +315,29 @@ async function downloadSummary() {
     // Modifier seulement les valeurs, pour préserver les couleurs, bordures,
     // cellules fusionnées et la disposition du fichier original.
     sheet.cell('F4').value('Du ' + start + ' au ' + end);
+    // Le choix « Frais liés à » détermine la catégorie de main-d'œuvre.
+    // Le transport est calculé séparément à partir du kilométrage saisi.
+    const totalKm = rows.reduce((sum, r) => sum + (Number(r.distance) || 0), 0);
+    const installHours = rows
+      .filter(r => String(r.fees || '').startsWith('Install /'))
+      .reduce((sum, r) => sum + (Number(r.installationTime) || 0), 0);
+    const serviceHours = rows
+      .filter(r => String(r.fees || '').startsWith('Service call /'))
+      .reduce((sum, r) => sum + (Number(r.serviceTime) || 0), 0);
     const categories = [
-      { label: 'Temps voyagement', field: 'driveTime' },
-      { label: 'Temps d’installation', field: 'installationTime' },
-      { label: 'Temps de service', field: 'serviceTime' }
+      { label: 'Frais de transport (0,016 × km)', units: totalKm * 0.016 },
+      { label: 'Temps d’installation', units: installHours },
+      { label: 'Temps de service', units: serviceHours }
     ];
-    categories.forEach(({ label, field }, i) => {
+    categories.forEach(({ label, units }, i) => {
       const row = 16 + i;
-      const minutesOrHours = rows.reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
-      const hours = field === 'driveTime' ? minutesOrHours / 60 : minutesOrHours;
       sheet.cell('B' + row).value(start.slice(8,10) + '/' + start.slice(5,7) + ' au ' + end.slice(8,10) + '/' + end.slice(5,7));
       sheet.cell('B' + row).style({ wrapText: true, verticalAlignment: 'center', fontSize: 9 });
-      sheet.cell('C' + row).style({ horizontalAlignment: 'center', verticalAlignment: 'center' });
+      sheet.cell('C' + row).value(units);
+      sheet.cell('C' + row).style({ horizontalAlignment: 'center', verticalAlignment: 'center', numberFormat: '0.00' });
+      sheet.cell('D' + row).value(label);
       sheet.cell('D' + row).style({ wrapText: true, verticalAlignment: 'center', fontSize: 10 });
       sheet.row(row).height(32);
-      sheet.cell('C' + row).value(hours);
-      sheet.cell('D' + row).value(label);
       sheet.cell('E' + row).value(40);
       sheet.cell('F' + row).formula('C' + row + '*E' + row);
     });
